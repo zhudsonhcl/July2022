@@ -1,8 +1,11 @@
 package uskbank;
 
 import java.util.ArrayList;
+import java.util.Comparator;
 import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
+import java.util.stream.Collectors;
 
 public class Employee {
 	private String id;
@@ -66,138 +69,112 @@ public class Employee {
 		testList.add(new Employee("045", "Theo", 37, 'M', "Management", 2011, 72000));
 		testList.add(new Employee("312", "Ruth", 49, 'F', "Maintenance", 2018, 65000));
 		
-		//Create variables to track data for each problem
-		int mCounter = 0;
-		int fCounter = 0;
-		int mAveAge = 0;
-		int fAveAge = 0;
-		String highestSalaryName = "DEFAULT";
-		int highestSalary = -1;
-		ArrayList<Employee> joinedAfter2015 = new ArrayList<Employee>();
-		int highestAge = 0;
-		String highestAgeName = "DEFAULT";
-		HashMap<String, ArrayList<Employee>> deptList = new HashMap<String, ArrayList<Employee>>();
-		int mMaintCounter = 0;
-		int fMaintCounter = 0;
-		int mAveSalary = 0;
-		int fAveSalary = 0;
-		ArrayList<Employee> youngerThan31 = new ArrayList<Employee>();
-		ArrayList<Employee> olderThan25 = new ArrayList<Employee>();
-		
-		//Iterate through list and find correct data for each problem
-		for(Employee iCount: testList) {
-			if(iCount.getGender() == 'F') {
-				fCounter++;
-				fAveAge += iCount.getAge();
-				if(iCount.getDept().equals("Maintenance")) {
-					fMaintCounter++;
-				}
-				fAveSalary += iCount.getSalary();
-			}
-			else {
-				mCounter++;
-				mAveAge += iCount.getAge();
-				if(iCount.getDept().equals("Maintenance")) {
-					mMaintCounter++;
-				}
-				mAveSalary += iCount.getSalary();
-			}
-			
-			if(iCount.getSalary() > highestSalary) {
-				highestSalary = iCount.getSalary();
-				highestSalaryName = iCount.getName();
-			}
-			
-			if(iCount.getYear() > 2015) {
-				joinedAfter2015.add(iCount);
-			}
-			
-			if(iCount.getAge() > highestAge) {
-				highestAge = iCount.getAge();
-				highestAgeName = iCount.getName();
-			}
-			
-			deptList.putIfAbsent(iCount.getDept(), new ArrayList<Employee>());
-			
-			deptList.get(iCount.getDept()).add(iCount);
-			
-			
-			if(iCount.getAge() <= 30) {
-				youngerThan31.add(iCount);
-			}
-			
-			if(iCount.getAge() > 25) {
-				olderThan25.add(iCount);
-			}
-		}
-		
-		//Calculate the averages of each gender
-		mAveAge /= mCounter;
-		mAveSalary /= mCounter;
-		
-		fAveAge /= fCounter;
-		fAveSalary /= fCounter;
-		
+		//Problem 1, males and females in organization
+		int mCounter = testList.stream().filter(employee -> employee.getGender() == 'M')
+				.collect(Collectors.toList()).size();
+		int fCounter = testList.size() - mCounter;
 		
 		System.out.println("Problem 1");
-		System.out.println("Male employees: " + mCounter + ",   Female employees: " + fCounter);
+		System.out.println("Males in organization: " + mCounter);
+		System.out.println("Females in organization: " + fCounter + "\n");
 		
-		System.out.println();
+		
+		//Problem 2, average age of male and female employees
+		int mAveAge = testList.stream().filter(employee -> employee.getGender() == 'M')
+				.collect(Collectors.averagingDouble(Employee::getAge)).intValue();
+		
+		int fAveAge = testList.stream().filter(employee -> employee.getGender() == 'F')
+				.collect(Collectors.averagingInt(Employee::getAge)).intValue();
+		
 		System.out.println("Problem 2");
-		System.out.println("Male average age: " + mAveAge + ",   Female average age: " + fAveAge);
+		System.out.println("Average male age: " + mAveAge);
+		System.out.println("Average female age: " + fAveAge + "\n");
 		
-		System.out.println();
+		
+		//Problem 3, highest paid employee
+		Employee highest = testList.stream().max(Comparator.comparing(employee -> employee.getSalary())).get();
+		
 		System.out.println("Problem 3");
-		System.out.println("Highest paid employee: " + highestSalaryName + ", $" + highestSalary);
+		System.out.println("Highest paid employee: " + highest.getName() +", " + highest.getSalary() + "\n");
 		
-		System.out.println();
+		
+		//Problem 4, employees who joined after 2015
+		List<Employee> after2015 = testList.stream().filter(employee -> employee.getYear() > 2015)
+				.collect(Collectors.toList());
+		
 		System.out.println("Problem 4");
-		System.out.print("Joined after 2015: ");
-		for(Employee employeeP4: joinedAfter2015) {
-			System.out.print(employeeP4.getName() + ", ");
-		}
+		System.out.print("Employees who joined after 2015: ");
+		after2015.forEach((employee) -> {
+			System.out.print(employee.getName() + ", ");
+		});
 		
-		System.out.println();
-		System.out.println();
+		
+		//Problem 5, senior most employee
+		Employee senior = testList.stream().max(Comparator.comparing(employee -> employee.getAge())).get();
+		
+		System.out.println("\n");
 		System.out.println("Problem 5");
-		System.out.println("Senior-most employee: " + highestAgeName + ", " + highestAge);
-	
-		System.out.println();
+		System.out.println("Seniormost employee: " + senior.getName() + ", " + senior.getAge() + "\n ");
+		
+		
+		//Problem 6, # of employees in each department
+		Map<String, List<Employee>> deptList = testList.stream()
+				.collect(Collectors.groupingBy(Employee::getDept));
+		
 		System.out.println("Problem 6");
 		System.out.println("Number of employees per department");
-		System.out.println();
 		deptList.forEach((key, value) -> System.out.println(key + ": " +  value.size()));
-	
+		
+		
+		//Problem 7, male and female employees in maintenance department
+		Long mMaintCounter = testList.stream().
+				filter(employee -> (employee.getGender() == 'M') && (employee.getDept().equals("Maintenance")))
+				.collect(Collectors.counting());
+		Long fMaintCounter = testList.stream().
+				filter(employee -> (employee.getGender() == 'F') && (employee.getDept().equals("Maintenance")))
+				.collect(Collectors.counting());
+		
 		System.out.println();
 		System.out.println("Problem 7");
-		System.out.println("Count of males and females in maintenance");
-		System.out.println("Males: " + mMaintCounter);
-		System.out.println("Females: " + fMaintCounter);
+		System.out.println("Male employees in maint: " + mMaintCounter);
+		System.out.println("Female employees in maint: " + fMaintCounter + "\n");
 		
-		System.out.println();
+		
+		//Problem 8, average salary of male and female employees
+		int mAveSalary = testList.stream().filter(employee -> employee.getGender() == 'M')
+				.collect(Collectors.averagingInt(employee -> employee.getSalary())).intValue();
+		int fAveSalary = testList.stream().filter(employee -> employee.getGender() == 'F')
+				.collect(Collectors.averagingInt(employee -> employee.getSalary())).intValue();
+		
 		System.out.println("Problem 8");
-		System.out.println("Average salary for males and females");
-		System.out.println("Males: " + mAveSalary);
-		System.out.println("Females: " + fAveSalary);
+		System.out.println("Average male salary: " + mAveSalary);
+		System.out.println("Average female salary: " + fAveSalary + "\n");
 		
-		System.out.println();
+		
+		//Problem 9, employees younger or equal to 30, employees older than 25
+		List<Employee> youngerThan31 = testList.stream().filter(employee -> employee.getAge() > 31)
+				.collect(Collectors.toList());
+		List<Employee> olderThan25 = testList.stream().filter(employee -> employee.getAge() < 25)
+				.collect(Collectors.toList());
+		
 		System.out.println("Problem 9");
 		System.out.print("Employees younger than or equal to 30: ");
-		for(Employee employeeP9one: youngerThan31) {
-			System.out.print(employeeP9one.getName() + ", ");
-		}
+		youngerThan31.forEach((employee) -> {
+			System.out.print(employee.getName() + ", ");
+		});
 		
 		System.out.println();
 		System.out.print("Employees older than 25: ");
-		for(Employee employeeP9two: olderThan25) {
-			System.out.print(employeeP9two.getName() + ", ");
-		}
+		olderThan25.forEach((employee) -> {
+			System.out.print(employee.getName() + ", ");
+		});
 		
-		System.out.println();
-		System.out.println();
+		
+		//Problem 10, employees in each department
+		//Using the already created deptList from problem 6
+		System.out.println("\n");
 		System.out.println("Problem 10");
 		System.out.println("Employees in each department");
-		System.out.println();
 		for(String dept: deptList.keySet()) {
 			System.out.print(dept +": ");
 			for(Employee employeeP10: deptList.get(dept)) {
